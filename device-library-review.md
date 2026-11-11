@@ -36,7 +36,6 @@ reported, and it is listed as such.
 | samsungtvws | Samsung TV | REST calls ignore the HTTP status: a 404 with a JSON body is returned as a result | [#200](https://github.com/xchwarze/samsung-tv-ws-api/issues/200) |
 | pysmartthings | SmartThings | A 400, 405 or 410 to a command returns `None`, which looks like success | [#861](https://github.com/pySmartThings/pysmartthings/issues/861) |
 | aiopvapi | PowerView shades | A move the hub refuses with HTTP 200 and `err: 209` is reported as done, and the cache takes the target | [#63](https://github.com/sander76/aio-powerview-api/issues/63) |
-| greeclimate | GREE mini-split | The command result's `r` code is dropped, and the requested values become the cached state | [#258](https://github.com/cmroche/greeclimate/issues/258) |
 | nexia | Trane thermostats | aiohttp follows the 302 itself, so the re-login code never runs. An expired session's PUT body is sent to the login page and the caller sees 200 | [#237](https://github.com/hvaclibs/nexia/issues/237) |
 | pyenphase | Enphase gateway | Token retries on a connection error have no stop, so they retry forever | [#543](https://github.com/pyenphase/pyenphase/issues/543) |
 | pylutron | Lutron RadioRA 2 | After one lost reply, that output is never queried again, and the cached level is returned | already open as [PR #133](https://github.com/thecynic/pylutron/pull/133) |
@@ -52,6 +51,10 @@ Read and found to be design choices, not defects. None was reported:
 - **pymiele** returns the response, so the caller reads the body. Token refresh is the caller's job.
 - **pyblu** parses a chosen subset of the status fields.
 - **screenlogicpy**'s fixed 2-second timeout is a missing setting, not wrong behaviour.
+- **greeclimate** ignores the `r` code on a command reply while checking it on bind and inventory replies. We
+  reported it ([#258](https://github.com/cmroche/greeclimate/issues/258)) and were wrong to: our test's rejection
+  code was invented, and the protocol's reference notes say a unit sends nothing when a request fails. No unit
+  has been shown to answer a command with anything but 200. The maintainer closed it.
 - **tesla-wall-connector** handles HTTP status correctly. Its repair of a body missing its closing `}` would
   also accept a body cut off mid-number, but we have never seen a device do that, so it was not reported.
 
@@ -60,8 +63,8 @@ unreachable, which is the defect reported instead.
 
 ## The pattern
 
-Four of the twenty libraries re-send a write after a timeout. Four more turn a refusal into a success: an
-ignored HTTP status, an ignored error field in the body, or an ignored result code. Both come from the same
+Four of the twenty libraries re-send a write after a timeout. Three more turn a refusal into a success: an
+ignored HTTP status, or an ignored error field in the body. Both come from the same
 habit. **A timeout is treated as "the request did not arrive", when it only means "the reply did not
 arrive".** Retrying is right for a read and wrong for a write, and a library that does not know which
 is which gets writes wrong.
@@ -70,7 +73,7 @@ What the service's own wire modules do instead:
 
 - **Retries are allowed for connecting and for reads only.** A write is sent once. A lost reply is reported
   as "sent, verdict unknown", and the caller decides whether to read the state back.
-- **The vendor's verdict is the result.** An HTTP status, an `err` field and an `r` code each count as an
+- **The vendor's verdict is the result.** An HTTP status, an `err` field and a result code each count as an
   answer. A 200 is not taken as success when the body says otherwise.
 - **Every retry loop has a stop**, and a refused credential gets the bound described in
   [one refresh per refused token](one-refresh-then-an-hour.md).

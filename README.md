@@ -18,7 +18,7 @@ reader can see the method is practised, not proposed.
   every recording.
 - [Twenty device libraries, read for one property: does a write go out once?](device-library-review.md)
   — the open-source libraries for each device, read at HEAD and tested without a device. Four re-send a
-  write after a timeout, four turn a refusal into success, and each defect is reported upstream.
+  write after a timeout, three turn a refusal into success, and each defect is reported upstream.
 - [Rules the code learned](rules-the-code-learned.md) — twelve rules, each written after a failure: no
   environment in the code, a cache that refreshes behind the caller, a check that reports rather than
   stops, and more.
