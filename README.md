@@ -16,6 +16,9 @@ reader can see the method is practised, not proposed.
 - [A credential substituted in every encoding](credential-in-every-encoding.md) — every value the
   client sent is replaced by a placeholder, plain, percent- and form-encoded, in every error and
   every recording.
+- [Recorded vendor answers, replayed through the real driver](recorded-vendor-answers.md) — production
+  keeps each vendor's latest raw answer, credentials substituted. The suite replays them through the real
+  parsers and fails on a leaked credential, a broken field contract or a recording older than 30 days.
 - [Twenty device libraries, read for one property: does a write go out once?](device-library-review.md)
   — the open-source libraries for each device, read at HEAD and tested without a device. Four re-send a
   write after a timeout, three turn a refusal into success, and each defect is reported upstream.
